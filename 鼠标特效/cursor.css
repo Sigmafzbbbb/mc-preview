@@ -1,0 +1,86 @@
+/**
+ * Neuro 鼠标指针 v2 - 自定义光标样式
+ * 
+ * 使用方法：将此文件和 cursors/ 文件夹放在同一目录下，然后在 HTML 中引入即可。
+ * <link rel="stylesheet" href="cursor.css">
+ * 
+ * 目录结构：
+ *   你的网站/
+ *   ├── cursor.css          ← 这个文件
+ *   ├── cursor-trail.js     ← 拖尾特效（可选）
+ *   └── cursors/            ← 光标图片文件夹
+ *       ├── 1.png           默认箭头
+ *       ├── 3.png           十字准星
+ *       ├── 4.png           禁止
+ *       ├── 5.png           等待
+ *       ├── 6.png           帮助
+ *       ├── 7.png           手型(链接/按钮)
+ *       ├── 10.png          文本输入
+ *       ├── 12-2.png        对角线缩放 NW-SE
+ *       ├── 13-2.png        对角线缩放 NE-SW
+ *       ├── 14-2.png        水平缩放
+ *       ├── 15-2.png        垂直缩放
+ *       └── 16-2.png        移动
+ */
+
+/* 默认箭头 */
+*,
+*::before,
+*::after {
+    cursor: url('cursors/1.png') 0 0, default !important;
+}
+
+/* 链接 / 按钮 / 可点击元素 */
+a,
+button,
+[type="button"],
+[type="submit"],
+[role="button"],
+select,
+summary,
+[onclick],
+label[for] {
+    cursor: url('cursors/7.png') 0 0, pointer !important;
+}
+
+/* 文本输入区域 */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+input[type="url"],
+input[type="number"],
+input[type="tel"],
+textarea,
+[contenteditable="true"] {
+    cursor: url('cursors/10.png') 0 0, text !important;
+}
+
+/* 禁止操作 */
+[disabled],
+.not-allowed {
+    cursor: url('cursors/4.png') 0 0, not-allowed !important;
+}
+
+/* 等待 / 加载 */
+.waiting,
+.loading {
+    cursor: url('cursors/5.png') 0 0, wait !important;
+}
+
+/* 帮助提示 */
+[title] {
+    cursor: url('cursors/6.png') 0 0, help !important;
+}
+
+/* 缩放 & 移动 */
+.resize-n { cursor: url('cursors/15-2.png') 0 0, n-resize !important; }
+.resize-s { cursor: url('cursors/15-2.png') 0 0, s-resize !important; }
+.resize-e { cursor: url('cursors/14-2.png') 0 0, e-resize !important; }
+.resize-w { cursor: url('cursors/14-2.png') 0 0, w-resize !important; }
+.resize-nw { cursor: url('cursors/12-2.png') 0 0, nw-resize !important; }
+.resize-se { cursor: url('cursors/12-2.png') 0 0, se-resize !important; }
+.resize-ne { cursor: url('cursors/13-2.png') 0 0, ne-resize !important; }
+.resize-sw { cursor: url('cursors/13-2.png') 0 0, sw-resize !important; }
+.move { cursor: url('cursors/16-2.png') 0 0, move !important; }
+.crosshair { cursor: url('cursors/3.png') 0 0, crosshair !important; }
