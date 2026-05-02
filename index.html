@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Litematic Viewer - 投影预览器</title>
+    <link rel="stylesheet" href="鼠标特效/cursor.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <header class="header">
+        <nav class="nav">
+            <div class="logo">Litematic Viewer</div>
+        </nav>
+    </header>
+
+    <main class="main">
+        <!-- 英雄区 -->
+        <section class="banner">
+            <h1>上传你的投影文件</h1>
+            <p class="banner-subtitle">支持 .litematic 格式的投影文件</p>
+        </section>
+
+        <!-- 上传区域 -->
+        <section class="upload-section">
+            <div class="upload-zone" id="upload-zone">
+                <div class="upload-icon">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                </div>
+                <p class="upload-text">拖拽文件到此处或点击选择</p>
+                <p class="upload-hint">仅支持 .litematic 文件</p>
+                <input type="file" id="file-input" accept=".litematic" hidden>
+            </div>
+        </section>
+
+        <!-- 预览区域 -->
+        <section class="preview-section" id="preview-section">
+            <div class="preview-container">
+                <!-- 左侧 3D 画布 -->
+                <div class="canvas-wrapper">
+                    <div class="canvas-container" id="canvas-container">
+                        <canvas id="three-canvas"></canvas>
+                        <!-- 加载遮罩 -->
+                        <div class="loading-overlay" id="loading-overlay">
+                            <div class="loading-spinner"></div>
+                            <p class="loading-text">正在解析...</p>
+                        </div>
+                        <!-- 空状态 -->
+                        <div class="empty-state" id="empty-state">
+                            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                                <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                                <line x1="12" y1="22.08" x2="12" y2="12"/>
+                            </svg>
+                            <p>上传文件后在此预览</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- 右侧信息面板 -->
+                <div class="info-panel" id="info-panel">
+                    <h3 class="info-title">文件信息</h3>
+                    <div class="info-divider"></div>
+                    <div class="info-content">
+                        <div class="info-row">
+                            <span class="info-label">文件名</span>
+                            <span class="info-value" id="info-name">--</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">大小</span>
+                            <span class="info-value" id="info-size">--</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">作者</span>
+                            <span class="info-value" id="info-author">--</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">尺寸</span>
+                            <span class="info-value" id="info-dimensions">--</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">方块总数</span>
+                            <span class="info-value" id="info-total-blocks">--</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">区域数量</span>
+                            <span class="info-value" id="info-regions">--</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">方块种类</span>
+                            <span class="info-value" id="info-block-types">--</span>
+                        </div>
+                    </div>
+                    <!-- 方块统计 -->
+                    <div class="block-stats" id="block-stats">
+                        <h4 class="stats-title">方块统计</h4>
+                        <div class="stats-divider"></div>
+                        <div class="stats-list" id="stats-list"></div>
+                        <button class="stats-toggle-btn" id="stats-toggle-btn">
+                            展开全部
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 控制面板 -->
+        <section class="controls-bar" id="controls-bar">
+            <div class="control-group">
+                <label class="control-label">图层范围</label>
+                <div class="layer-slider-group">
+                    <span class="layer-value" id="layer-min-label">0</span>
+                    <input type="range" class="range-input" id="layer-min" min="0" max="255" value="0">
+                    <input type="range" class="range-input" id="layer-max" min="0" max="255" value="255">
+                    <span class="layer-value" id="layer-max-label">255</span>
+                </div>
+            </div>
+            <button class="control-btn" id="btn-wireframe">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                线框
+            </button>
+            <button class="control-btn" id="btn-rotate">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                旋转
+            </button>
+            <button class="control-btn" id="btn-axes">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V4"/><path d="M12 4l-4 4"/><path d="M12 4l4 4"/><path d="M4 12h16"/></svg>
+                坐标轴
+            </button>
+            <button class="control-btn" id="btn-grid">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
+                网格
+            </button>
+            <button class="control-btn" id="btn-reset">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                重置视角
+            </button>
+            <button class="control-btn btn-danger" id="btn-clear">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                关闭投影
+            </button>
+            <button class="control-btn btn-primary" id="btn-textures" onclick="window.location.href='texture-settings.html'">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12V7a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 7v5"/><path d="M3 12v5a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 17v-5"/><path d="M3 12h18"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
+                贴图设置
+            </button>
+            <button class="control-btn" id="btn-flip-vertical">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18"/><path d="M8 7v10"/><path d="M16 7v10"/><path d="M3 7l5 5-5 5"/><path d="M21 7l-5 5 5 5"/></svg>
+                垂直翻转
+            </button>
+            <button class="control-btn" id="btn-export-flipped">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                导出翻转文件
+            </button>
+            <button class="control-btn" id="btn-y-offset-up">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19v5M5 14l5 5"/><path d="M12 19M19 14l5 5"/></svg>
+                上移
+            </button>
+            <button class="control-btn" id="btn-y-offset-down">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v5M19 14l5 5"/><path d="M12 5M19 14l5 5"/></svg>
+                下移
+            </button>
+            <button class="control-btn" id="btn-reset-y-offset">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                重置 Y 轴
+            </button>
+        </section>
+    </main>
+
+    <!-- 贴图设置模态框 -->
+    <div class="texture-modal-overlay" id="texture-modal">
+        <div class="texture-modal">
+            <div class="texture-modal-header">
+                <h2>贴图设置</h2>
+                <button class="texture-modal-close" id="texture-modal-close">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="texture-modal-body">
+                <!-- 方块选择 -->
+                <div class="texture-selector">
+                    <label class="texture-label">选择方块：</label>
+                    <select class="texture-select" id="block-select">
+                        <option value="">-- 请选择方块 --</option>
+                    </select>
+                </div>
+
+                <!-- 六面贴图配置 -->
+                <div class="texture-config" id="texture-config">
+                    <h3 class="config-title">六面贴图配置</h3>
+                    <div class="face-config-row">
+                        <div class="face-config-item">
+                            <label class="face-label">顶面</label>
+                            <input type="text" class="texture-input" id="texture-top" placeholder="例如: grass_block_top.png">
+                        </div>
+                        <div class="face-config-item">
+                            <label class="face-label">底面</label>
+                            <input type="text" class="texture-input" id="texture-bottom" placeholder="例如: dirt.png">
+                        </div>
+                    </div>
+                    <div class="face-config-row">
+                        <div class="face-config-item">
+                            <label class="face-label">北面</label>
+                            <input type="text" class="texture-input" id="texture-north" placeholder="例如: grass_block_side.png">
+                        </div>
+                        <div class="face-config-item">
+                            <label class="face-label">南面</label>
+                            <input type="text" class="texture-input" id="texture-south" placeholder="例如: grass_block_side.png">
+                        </div>
+                    </div>
+                    <div class="face-config-row">
+                        <div class="face-config-item">
+                            <label class="face-label">东面</label>
+                            <input type="text" class="texture-input" id="texture-east" placeholder="例如: grass_block_side.png">
+                        </div>
+                        <div class="face-config-item">
+                            <label class="face-label">西面</label>
+                            <input type="text" class="texture-input" id="texture-west" placeholder="例如: grass_block_side.png">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 快捷设置 -->
+                <div class="quick-settings">
+                    <h3 class="config-title">快捷设置</h3>
+                    <div class="quick-actions">
+                        <button class="quick-btn" id="btn-fill-all">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 11V9a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v2"/><path d="M19 19v2a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-2"/><path d="M5 7l7 5 7-5"/></svg>
+                            六面相同
+                        </button>
+                        <button class="quick-btn" id="btn-fill-sides">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18"/><path d="M5 7l4 4"/><path d="M15 11l4-4"/><path d="M5 17l4-4"/><path d="M15 13l4 4"/></svg>
+                            四侧相同
+                        </button>
+                        <button class="quick-btn" id="btn-reset-block">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                            重置方块
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 导入导出 -->
+                <div class="texture-actions">
+                    <button class="texture-action-btn" id="btn-export">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        导出配置
+                    </button>
+                    <button class="texture-action-btn" id="btn-import">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        导入配置
+                    </button>
+                    <button class="texture-action-btn btn-save" id="btn-save-all">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                        保存全部
+                    </button>
+                    <button class="texture-action-btn btn-danger" id="btn-clear-all">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                        清空全部
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2026 Litematic Viewer. All rights reserved.</p>
+    </footer>
+
+    <!-- Three.js r128 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <!-- 应用脚本 -->
+    <script src="js/nbt-parser.js"></script>
+    <script src="js/block-colors.js"></script>
+    <script src="js/block-textures.js"></script>
+    <script src="js/litematic-reader.js"></script>
+    <script src="js/renderer.js"></script>
+    <script src="js/texture-settings.js"></script>
+    <script src="js/app.js"></script>
+    <script src="鼠标特效/cursor-trail.js"></script>
+</body>
+</html>
